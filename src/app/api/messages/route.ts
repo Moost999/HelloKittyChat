@@ -1,12 +1,7 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { PrismaClient } from "@prisma/client";
-import { authOptions } from "../auth/[...nextauth]/route";
-
-const prisma = new PrismaClient();
-
-// Forçar a rota a ser dinâmica para evitar cache
-export const dynamic = 'force-dynamic';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -27,14 +22,13 @@ export async function POST(request: Request) {
         content,
         user: {
           connect: {
-            email: session.user.email,
+            email: session.user.email!,
           },
         },
       },
       include: {
         user: {
           select: {
-            id: true,
             name: true,
             email: true,
           },
@@ -64,7 +58,6 @@ export async function GET() {
       include: {
         user: {
           select: {
-            id: true,
             name: true,
             email: true,
           },

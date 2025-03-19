@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
@@ -10,31 +10,26 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    // Obtendo a sessão do usuário autenticado usando a configuração importada
     const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user) {
-      return NextResponse.json(
-        { error: 'Usuário não autenticado' },
-        { status: 401 }
-      );
+
+    if (!session) {
+      return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    // Configurar headers para SSE
+    // Set headers for SSE
     const headers = {
       'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache, no-transform',
-      'Connection': 'keep-alive',
-      'X-Accel-Buffering': 'no',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
     };
 
-    // Criar um novo ReadableStream
+    // Create a new ReadableStream
     const stream = new ReadableStream({
       async start(controller) {
-        // Função para enviar mensagens
+        // Function to send messages
         const sendMessages = async () => {
           try {
-            // Buscar mensagens no banco de dados
+            // Get messages from database
             const messages = await prisma.message.findMany({
               orderBy: {
                 createdAt: 'asc',
@@ -50,39 +45,35 @@ export async function GET(req: NextRequest) {
               },
             });
 
-            // Formatar os dados no formato SSE
+            // Format the data as SSE
             const data = `data: ${JSON.stringify(messages)}\n\n`;
             controller.enqueue(new TextEncoder().encode(data));
           } catch (error) {
-            console.error('Erro ao buscar mensagens:', error);
+            console.error('Error fetching messages:', error);
             controller.enqueue(
               new TextEncoder().encode(
-                `data: ${JSON.stringify({ error: 'Falha ao buscar mensagens' })}\n\n`
+                `data: ${JSON.stringify({ error: 'Failed to fetch messages' })}\n\n`
               )
             );
           }
         };
 
-        // Enviar mensagens iniciais
+        // Send initial messages
         await sendMessages();
 
-        // Configurar intervalo para enviar mensagens a cada 3 segundos
+        // Set up interval to send messages every 3 seconds
         const interval = setInterval(sendMessages, 3000);
 
-        // Limpar ao fechar a conexão
+        // Clean up on close
         req.signal.addEventListener('abort', () => {
           clearInterval(interval);
-          controller.close();
         });
-      }
+      },
     });
 
     return new NextResponse(stream, { headers });
   } catch (error) {
-    console.error('Erro SSE:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
+    console.error('SSE error:', error);
+    return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
