@@ -20,42 +20,36 @@ export default function LoginForm() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-
-    // Adicione um timeout para evitar esperas infinitas
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("O login está demorando muito. Tente novamente.")), 10000)
-    );
-
+  
     try {
-      // Race entre a autenticação e o timeout
-      const result = await Promise.race([
-        signIn("credentials", {
-          email,
-          password,
-          redirect: false,
-        }),
-        timeoutPromise
-      ]);
-
-      // Properly type the result object
-      if (result && 'error' in result && result.error) {
-        setError(result.error);
-      } else {
-        router.push("/chat");
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(data.error || 'Something went wrong');
       }
+  
+      console.log('Login successful:', data);
+      router.push('/chat');
     } catch (error) {
-      console.error("Login error:", error);
-      setError("Problema de conexão. Verifique sua internet ou tente mais tarde.");
+      console.error('Login error:', error);
+      setError(error.message || 'Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
         <Image
-          src="/logo.png"
+          src="/madoka-icon.png"
           alt="Hello Kitty Chat Logo"
           width={100}
           height={100}
