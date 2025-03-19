@@ -40,7 +40,11 @@ export default function LoginForm() {
       router.push('/chat');
     } catch (error) {
       console.error('Login error:', error);
-      setError(error.message || 'Something went wrong. Please try again.');
+      if (error instanceof Error) {
+        setError(error.message || 'Something went wrong. Please try again.');
+      } else {
+        setError('Something went wrong. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
