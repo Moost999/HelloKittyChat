@@ -20,28 +20,31 @@ export default function LoginForm() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-
+    
+    // Adicione um timeout para evitar esperas infinitas
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("O login está demorando muito. Tente novamente.")), 10000)
+    );
+    
     try {
-      console.log("Attempting to sign in with:", { email, password }); // Log das credenciais
-
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-
-      console.log("Result from signIn:", result); // Log da resposta do signIn
-
+      // Race entre a autenticação e o timeout
+      const result = await Promise.race([
+        signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        }),
+        timeoutPromise
+      ]);
+      
       if (result?.error) {
-        console.error("Sign-in error:", result.error); // Log de erro
         setError(result.error);
       } else {
-        console.log("Sign-in successful, redirecting to /chat"); // Log de sucesso
         router.push("/chat");
       }
     } catch (error) {
-      console.error("Unexpected error during sign-in:", error); // Log de erro inesperado
-      setError("Something went wrong. Please try again.");
+      console.error("Login error:", error);
+      setError("Problema de conexão. Verifique sua internet ou tente mais tarde.");
     } finally {
       setIsLoading(false);
     }

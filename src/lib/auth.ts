@@ -15,33 +15,37 @@ secret: process.env.NEXTAUTH_SECRET,
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
+        console.log("Auth function started"); // Debug log
         
-        // Find user by email
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            return null;
           }
-        });
-        
-        if (!user) {
-          return null;
+          
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+            select: { id: true, email: true, name: true, password: true } // Only select what you need
+          });
+          
+          if (!user) {
+            return null;
+          }
+          
+          const passwordValid = await compare(credentials.password, user.password);
+          
+          if (!passwordValid) {
+            return null;
+          }
+          
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name || undefined
+          };
+        } catch (error) {
+          console.error("Auth error:", error); // Log errors
+          throw error; // Re-throw to return proper error response
         }
-        
-        // Check if password matches
-        const passwordValid = await compare(credentials.password, user.password);
-        
-        if (!passwordValid) {
-          return null;
-        }
-        
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name || undefined // Convert null to undefined
-        };
       }
     })
   ],
