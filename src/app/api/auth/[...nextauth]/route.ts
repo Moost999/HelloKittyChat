@@ -1,20 +1,35 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
+import { NextAuthOptions } from "next-auth";
 import { JWT } from "next-auth/jwt";
-import { Session, User } from "next-auth";
+
+// Extensões de tipos para Next-Auth
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      email: string;
+      name?: string | null;
+    }
+  }
+  
+  interface User {
+    id: string;
+    email: string;
+    name?: string | null;
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    id: string;
+    email: string;
+  }
+}
 
 const prisma = new PrismaClient();
-
-// Defina a interface do usuário para evitar o uso de `any`
-interface AppUser extends User {
-  id: string;
-  email: string;
-  password: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -24,43 +39,39 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
-        console.log("Credentials received:", credentials);
-
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
-          console.error("Email and password are required");
-          throw new Error(JSON.stringify({ error: "Email and password are required" }));
+          throw new Error("Email e senha são obrigatórios");
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+          });
 
-        if (!user) {
-          console.error("User not found");
-          throw new Error(JSON.stringify({ error: "User not found" }));
+          if (!user) {
+            throw new Error("Usuário não encontrado");
+          }
+
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          );
+
+          if (!isPasswordValid) {
+            throw new Error("Senha inválida");
+          }
+
+          // Retorne o usuário como um objeto User conforme esperado pelo NextAuth
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name || undefined
+          };
+        } catch (error) {
+          console.error("Erro na autenticação:", error);
+          return null;
         }
-
-        console.log("User found:", user);
-
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
-
-        if (!isPasswordValid) {
-          console.error("Invalid password");
-          throw new Error(JSON.stringify({ error: "Invalid password" }));
-        }
-
-        console.log("User authenticated successfully:", user);
-
-        // Retorne o usuário no formato esperado pelo NextAuth
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        } as AppUser;
       },
     }),
   ],
@@ -74,8 +85,8 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string;
-        session.user.email = token.email as string;
+        session.user.id = token.id;
+        session.user.email = token.email;
       }
       return session;
     },
@@ -84,8 +95,12 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
   },
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 dias
+  },
+  debug: process.env.NODE_ENV === "development",
 };
 
 const handler = NextAuth(authOptions);
-
 export { handler as GET, handler as POST };
