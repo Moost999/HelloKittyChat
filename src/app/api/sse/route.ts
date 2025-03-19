@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
-
-// Forçar a rota a ser dinâmica
+// Force route to be dynamic
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session) {
+    if (!session || !session.user) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
@@ -20,7 +18,7 @@ export async function GET(req: NextRequest) {
     const headers = {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
+      'Connection': 'keep-alive',
     };
 
     // Create a new ReadableStream
