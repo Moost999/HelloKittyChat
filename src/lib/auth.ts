@@ -45,10 +45,6 @@ secret: process.env.NEXTAUTH_SECRET,
       }
     })
   ],
-  pages: {
-    signIn: "/",
-    error: "/"  // Redirect to login page on error
-  },
   session: {
     strategy: "jwt",
   },
