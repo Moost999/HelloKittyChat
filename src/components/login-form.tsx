@@ -51,7 +51,7 @@ export default function LoginForm() {
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
         <Image
-          src="/madoka-icon.png"
+          src="/madoka-icon.jpg"
           alt="Hello Kitty Chat Logo"
           width={100}
           height={100}
