@@ -1,7 +1,6 @@
 "use client";
 
-import type React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,20 +22,26 @@ export default function LoginForm() {
     setError("");
 
     try {
+      console.log("Attempting to sign in with:", { email, password }); // Log das credenciais
+
       const result = await signIn("credentials", {
         email,
         password,
         redirect: false,
       });
 
+      console.log("Result from signIn:", result); // Log da resposta do signIn
+
       if (result?.error) {
-        setError("Invalid email or password");
+        console.error("Sign-in error:", result.error); // Log de erro
+        setError(result.error);
       } else {
+        console.log("Sign-in successful, redirecting to /chat"); // Log de sucesso
         router.push("/chat");
       }
     } catch (error) {
+      console.error("Unexpected error during sign-in:", error); // Log de erro inesperado
       setError("Something went wrong. Please try again.");
-      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -84,7 +89,6 @@ export default function LoginForm() {
                 />
               </div>
               {error && <p className="text-red-500 text-sm">{error}</p>}
-              
             </div>
           </form>
         </CardContent>
