@@ -20,12 +20,12 @@ export default function LoginForm() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-    
+
     // Adicione um timeout para evitar esperas infinitas
-    const timeoutPromise = new Promise((_, reject) => 
+    const timeoutPromise = new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error("O login está demorando muito. Tente novamente.")), 10000)
     );
-    
+
     try {
       // Race entre a autenticação e o timeout
       const result = await Promise.race([
@@ -36,8 +36,9 @@ export default function LoginForm() {
         }),
         timeoutPromise
       ]);
-      
-      if (result?.error) {
+
+      // Properly type the result object
+      if (result && 'error' in result && result.error) {
         setError(result.error);
       } else {
         router.push("/chat");
@@ -51,64 +52,59 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-pink-50 p-4">
-      <Card className="w-full max-w-md border-pink-200 shadow-md">
-        <CardHeader className="flex justify-center">
-          <div className="w-24 h-18 sm:w-80 sm:h-32 relative mb-2 sm:mb-4">
-            <Image
-              src="/madoka-icon.jpg"
-              alt="Hello Kitty"
-              width={200}
-              height={200}
-              className="object-contain"
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-3 sm:space-y-4">
-              <div className="space-y-1 sm:space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="border-pink-200 focus:border-pink-400 focus:ring-pink-400"
-                />
-              </div>
-              <div className="space-y-1 sm:space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="border-pink-200 focus:border-pink-400 focus:ring-pink-400"
-                />
-              </div>
-              {error && <p className="text-red-500 text-sm">{error}</p>}
+    <Card className="w-full max-w-md">
+      <CardHeader className="text-center">
+        <Image
+          src="/logo.png"
+          alt="Hello Kitty Chat Logo"
+          width={100}
+          height={100}
+          className="mx-auto"
+        />
+        <h1 className="text-2xl font-bold text-pink-500">Hello Kitty Chat</h1>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="border-pink-200 focus:border-pink-400 focus:ring-pink-400"
+              />
             </div>
-          </form>
-        </CardContent>
-        <CardFooter>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="border-pink-200 focus:border-pink-400 focus:ring-pink-400"
+              />
+            </div>
+
+            {error && <p className="text-sm text-red-500">{error}</p>}
+          </div>
+
           <Button
             type="submit"
-            className="w-full bg-pink-500 hover:bg-pink-600"
+            className="w-full mt-6 bg-pink-500 hover:bg-pink-600"
             disabled={isLoading}
-            onClick={handleSubmit}
           >
             {isLoading ? "Logging in..." : "Login"}
           </Button>
-        </CardFooter>
-      </Card>
-      <p className="mt-4 text-sm text-gray-500">
+        </form>
+      </CardContent>
+      <CardFooter className="text-center text-sm text-gray-500">
         Made with ❤️ by Moost
-      </p>
-    </div>
+      </CardFooter>
+    </Card>
   );
 }
