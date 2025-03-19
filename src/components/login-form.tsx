@@ -1,100 +1,107 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { signIn } from "next-auth/react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import Image from "next/image"
-import { useRouter } from "next/navigation"
+import type React from "react";
+import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
-  const router = useRouter()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     try {
       const result = await signIn("credentials", {
         email,
         password,
         redirect: false,
-      })
+      });
 
       if (result?.error) {
-        setError("Invalid email or password")
+        setError("Invalid email or password");
       } else {
-        router.push("/chat")
+        router.push("/chat");
       }
     } catch (error) {
-      setError("Something went wrong. Please try again.")
+      setError("Something went wrong. Please try again.");
+      console.error(error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
-    <Card className="w-full border-pink-200 shadow-md">
-      <CardHeader className="flex justify-center">
-        <div className="w-24 h-24 sm:w-32 sm:h-32 relative mb-2 sm:mb-4">
-          <Image src="/hello-kitty-login.png" alt="Hello Kitty" width={128} height={128} className="object-contain" />
-        </div>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-3 sm:space-y-4">
-            <div className="space-y-1 sm:space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="border-pink-200 focus:border-pink-400 focus:ring-pink-400"
-              />
-            </div>
-            <div className="space-y-1 sm:space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="border-pink-200 focus:border-pink-400 focus:ring-pink-400"
-              />
-            </div>
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            <div className="pt-2 text-xs text-gray-500">
-              <p>For demo: use "your-email@example.com" with password "password123"</p>
-              <p>Or "girlfriend-email@example.com" with the same password</p>
-            </div>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-pink-50 p-4">
+      <Card className="w-full max-w-md border-pink-200 shadow-md">
+        <CardHeader className="flex justify-center">
+          <div className="w-24 h-24 sm:w-80 sm:h-32 relative mb-2 sm:mb-4">
+            <Image
+              src="/madoka-icon.jpg"
+              alt="Hello Kitty"
+              width={400}
+              height={300}
+              className="object-contain"
+            />
           </div>
-        </form>
-      </CardContent>
-      <CardFooter>
-        <Button
-          type="submit"
-          className="w-full bg-pink-500 hover:bg-pink-600"
-          disabled={isLoading}
-          onClick={handleSubmit}
-        >
-          {isLoading ? "Logging in..." : "Login"}
-        </Button>
-      </CardFooter>
-    </Card>
-  )
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-1 sm:space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="border-pink-200 focus:border-pink-400 focus:ring-pink-400"
+                />
+              </div>
+              <div className="space-y-1 sm:space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="border-pink-200 focus:border-pink-400 focus:ring-pink-400"
+                />
+              </div>
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+              
+            </div>
+          </form>
+        </CardContent>
+        <CardFooter>
+          <Button
+            type="submit"
+            className="w-full bg-pink-500 hover:bg-pink-600"
+            disabled={isLoading}
+            onClick={handleSubmit}
+          >
+            {isLoading ? "Logging in..." : "Login"}
+          </Button>
+        </CardFooter>
+      </Card>
+      <p className="mt-4 text-sm text-gray-500">
+        Made with ❤️ by Moost
+      </p>
+    </div>
+  );
 }
-

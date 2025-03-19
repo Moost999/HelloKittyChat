@@ -12,6 +12,7 @@ import { SendIcon, MoonIcon, SunIcon } from "lucide-react"
 import type { Message } from "@/lib/types"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
+import Image from "next/image"
 
 interface ChatInterfaceProps {
   initialMessages: Message[]
@@ -132,11 +133,13 @@ export default function ChatInterface({ initialMessages, onMessageSent }: ChatIn
       {/* Background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-pink-100/80 dark:bg-pink-950/40 transition-colors duration-300"></div>
-        <img
-          src="/hello-kitty-backgroundv2.jpg"
-          alt="Background"
-          className="w-full h-full object-cover object-center opacity-60 dark:opacity-30 transition-opacity duration-300"
-        />
+       <Image
+                 src="/hello-kitty-backgroundv2.jpg"
+                 alt="Background"
+                 fill
+                 className="object-cover object-center opacity-60 dark:opacity-30 transition-opacity duration-300"
+                 priority
+               />
       </div>
 
       {/* Theme Toggle Button - Moved higher up for better mobile positioning */}

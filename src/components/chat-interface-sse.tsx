@@ -1,136 +1,137 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useRef, useEffect } from "react"
-import { useSession } from "next-auth/react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
-import { Avatar } from "@/components/ui/avatar"
-import { SendIcon, MoonIcon, SunIcon } from "lucide-react"
-import type { Message } from "@/lib/types"
-import { motion, AnimatePresence } from "framer-motion"
-import { cn } from "@/lib/utils"
+import type React from "react";
+import { useState, useRef, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Avatar } from "@/components/ui/avatar";
+import { SendIcon, MoonIcon, SunIcon } from "lucide-react";
+import type { Message } from "@/lib/types";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 interface ChatInterfaceProps {
-  initialMessages: Message[]
+  initialMessages: Message[];
 }
 
 export default function ChatInterface({ initialMessages }: ChatInterfaceProps) {
-  const { data: session } = useSession()
-  const [messages, setMessages] = useState<Message[]>(initialMessages)
-  const [newMessage, setNewMessage] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [isDarkMode, setIsDarkMode] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const eventSourceRef = useRef<EventSource | null>(null)
+  const { data: session } = useSession();
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [newMessage, setNewMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   // Set up SSE connection
   useEffect(() => {
     // Close any existing connection
     if (eventSourceRef.current) {
-      eventSourceRef.current.close()
+      eventSourceRef.current.close();
     }
 
     // Create a new EventSource connection
-    const eventSource = new EventSource("/api/sse")
-    eventSourceRef.current = eventSource
+    const eventSource = new EventSource("/api/sse");
+    eventSourceRef.current = eventSource;
 
     // Handle incoming messages
     eventSource.onmessage = (event) => {
       try {
-        const newMessages = JSON.parse(event.data)
-        setMessages(newMessages)
+        const newMessages = JSON.parse(event.data);
+        setMessages(newMessages);
       } catch (error) {
-        console.error("Error parsing SSE data:", error)
+        console.error("Error parsing SSE data:", error);
       }
-    }
+    };
 
     // Handle errors
     eventSource.onerror = (error) => {
-      console.error("SSE error:", error)
-      eventSource.close()
+      console.error("SSE error:", error);
+      eventSource.close();
 
       // Try to reconnect after a delay
       setTimeout(() => {
         if (document.visibilityState === "visible") {
-          eventSourceRef.current = new EventSource("/api/sse")
+          eventSourceRef.current = new EventSource("/api/sse");
         }
-      }, 5000)
-    }
+      }, 5000);
+    };
 
     // Handle visibility change to conserve resources
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden" && eventSourceRef.current) {
-        eventSourceRef.current.close()
+        eventSourceRef.current.close();
       } else if (document.visibilityState === "visible" && !eventSourceRef.current) {
-        eventSourceRef.current = new EventSource("/api/sse")
+        eventSourceRef.current = new EventSource("/api/sse");
       }
-    }
+    };
 
-    document.addEventListener("visibilitychange", handleVisibilityChange)
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // Clean up on unmount
     return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange)
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (eventSourceRef.current) {
-        eventSourceRef.current.close()
+        eventSourceRef.current.close();
       }
-    }
-  }, [])
+    };
+  }, []);
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    scrollToBottom();
+  }, [messages]);
 
   // Check system preference for dark mode on initial load
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-      setIsDarkMode(prefersDark)
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      setIsDarkMode(prefersDark);
       if (prefersDark) {
-        document.documentElement.classList.add("dark")
+        document.documentElement.classList.add("dark");
       }
     }
-  }, [])
+  }, []);
 
   // Add this after your other useEffect hooks
   useEffect(() => {
     // Prevent iOS from zooming on input focus
-    const metaViewport = document.querySelector("meta[name=viewport]")
+    const metaViewport = document.querySelector("meta[name=viewport]");
     if (!metaViewport) {
-      const meta = document.createElement("meta")
-      meta.name = "viewport"
-      meta.content = "width=device-width, initial-scale=1, maximum-scale=1"
-      document.head.appendChild(meta)
+      const meta = document.createElement("meta");
+      meta.name = "viewport";
+      meta.content = "width=device-width, initial-scale=1, maximum-scale=1";
+      document.head.appendChild(meta);
     } else {
-      metaViewport.setAttribute("content", "width=device-width, initial-scale=1, maximum-scale=1")
+      metaViewport.setAttribute("content", "width=device-width, initial-scale=1, maximum-scale=1");
     }
 
     return () => {
       if (metaViewport) {
-        metaViewport.setAttribute("content", "width=device-width, initial-scale=1")
+        metaViewport.setAttribute("content", "width=device-width, initial-scale=1");
       }
-    }
-  }, [])
+    };
+  }, []);
 
   const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode)
-    document.documentElement.classList.toggle("dark")
-  }
+    setIsDarkMode(!isDarkMode);
+    document.documentElement.classList.toggle("dark");
+  };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newMessage.trim() || !session?.user) return
+    e.preventDefault();
+    if (!newMessage.trim() || !session?.user) return;
 
-    setIsLoading(true)
-    const messageToSend = newMessage
-    setNewMessage("")
+    setIsLoading(true);
+    const messageToSend = newMessage;
+    setNewMessage("");
 
     try {
       const response = await fetch("/api/messages", {
@@ -139,40 +140,42 @@ export default function ChatInterface({ initialMessages }: ChatInterfaceProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ content: messageToSend }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to send message")
+        throw new Error("Failed to send message");
       }
 
       // No need to manually fetch messages as SSE will update them
     } catch (error) {
-      console.error("Error sending message:", error)
-      alert("Failed to send message. Please try again.")
+      console.error("Error sending message:", error);
+      alert("Failed to send message. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
 
       // Focus the input field to keep the keyboard open on mobile
       setTimeout(() => {
-        inputRef.current?.focus()
-      }, 10)
+        inputRef.current?.focus();
+      }, 10);
     }
-  }
+  };
 
   const addEmoji = (emoji: string) => {
-    setNewMessage((prev) => prev + emoji)
-    inputRef.current?.focus()
-  }
+    setNewMessage((prev) => prev + emoji);
+    inputRef.current?.focus();
+  };
 
   return (
     <div className="flex flex-col h-[calc(100vh-100px)] sm:h-[calc(100vh-120px)] relative">
       {/* Background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-pink-100/80 dark:bg-pink-950/40 transition-colors duration-300"></div>
-        <img
+        <Image
           src="/hello-kitty-backgroundv2.jpg"
           alt="Background"
-          className="w-full h-full object-cover object-center opacity-60 dark:opacity-30 transition-opacity duration-300"
+          fill
+          className="object-cover object-center opacity-60 dark:opacity-30 transition-opacity duration-300"
+          priority
         />
       </div>
 
@@ -299,8 +302,8 @@ export default function ChatInterface({ initialMessages }: ChatInterfaceProps) {
             enterKeyHint="send"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault()
-                handleSendMessage(e as unknown as React.FormEvent)
+                e.preventDefault();
+                handleSendMessage(e as unknown as React.FormEvent);
               }
             }}
           />
@@ -328,6 +331,5 @@ export default function ChatInterface({ initialMessages }: ChatInterfaceProps) {
         </form>
       </div>
     </div>
-  )
+  );
 }
-
