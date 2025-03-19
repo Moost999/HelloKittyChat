@@ -3,9 +3,18 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { JWT } from "next-auth/jwt";
-import { Session } from "next-auth";
+import { Session, User } from "next-auth";
 
 const prisma = new PrismaClient();
+
+// Defina a interface do usuário para evitar o uso de `any`
+interface AppUser extends User {
+  id: string;
+  email: string;
+  password: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -45,19 +54,25 @@ export const authOptions: NextAuthOptions = {
         }
 
         console.log("User authenticated successfully:", user);
-        return user;
+
+        // Retorne o usuário no formato esperado pelo NextAuth
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        } as AppUser;
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }: { token: JWT; user?: any }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
       }
       return token;
     },
-    async session({ session, token }: { session: Session; token: JWT }) {
+    async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
