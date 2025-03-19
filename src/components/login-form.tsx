@@ -46,12 +46,12 @@ export default function LoginForm() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-pink-50 p-4">
       <Card className="w-full max-w-md border-pink-200 shadow-md">
         <CardHeader className="flex justify-center">
-          <div className="w-24 h-24 sm:w-80 sm:h-32 relative mb-2 sm:mb-4">
+          <div className="w-24 h-18 sm:w-80 sm:h-32 relative mb-2 sm:mb-4">
             <Image
               src="/madoka-icon.jpg"
               alt="Hello Kitty"
-              width={300}
-              height={300}
+              width={200}
+              height={200}
               className="object-contain"
             />
           </div>
