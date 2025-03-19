@@ -53,6 +53,6 @@ export const config = {
      * 2. /_next (static files)
      * 3. /favicon.ico, /images, etc. (static files)
      */
-    "/((?!api/auth|_next/static|_next/image|favicon.ico|images).*)",
+    "/((?!api/auth|_next/static|/madoka-icon.jpg|/hello-kitty-background.jpg|hello-kitty-backgroundv2.jpg|_next/image|favicon.ico|images).*)",
   ],
 };
