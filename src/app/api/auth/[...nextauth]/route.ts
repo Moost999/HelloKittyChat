@@ -2,19 +2,20 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
-import { NextAuthOptions } from "next-auth";
-import { JWT } from "next-auth/jwt";
+import type { NextAuthOptions } from "next-auth/core/types";
 
-// Extensões de tipos para Next-Auth
+const prisma = new PrismaClient();
+
+// 🔹 Extensão de Tipos do NextAuth
 declare module "next-auth" {
   interface Session {
     user: {
       id: string;
       email: string;
       name?: string | null;
-    }
+    };
   }
-  
+
   interface User {
     id: string;
     email: string;
@@ -29,8 +30,7 @@ declare module "next-auth/jwt" {
   }
 }
 
-const prisma = new PrismaClient();
-
+// 🔹 Configuração de autenticação
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -39,9 +39,9 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials, req) {
+      async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email e senha são obrigatórios");
+          return null;
         }
 
         try {
@@ -49,24 +49,19 @@ export const authOptions: NextAuthOptions = {
             where: { email: credentials.email },
           });
 
-          if (!user) {
-            throw new Error("Usuário não encontrado");
-          }
+          if (!user) return null;
 
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
             user.password
           );
 
-          if (!isPasswordValid) {
-            throw new Error("Senha inválida");
-          }
+          if (!isPasswordValid) return null;
 
-          // Retorne o usuário como um objeto User conforme esperado pelo NextAuth
           return {
             id: user.id,
             email: user.email,
-            name: user.name || undefined
+            name: user.name || undefined,
           };
         } catch (error) {
           console.error("Erro na autenticação:", error);
@@ -102,5 +97,5 @@ export const authOptions: NextAuthOptions = {
   debug: process.env.NODE_ENV === "development",
 };
 
-const handler = NextAuth(authOptions);
-export { handler as GET, handler as POST };
+// 🔹 Forma correta de exportar para Next.js 14
+export const { handlers: { GET, POST } } = NextAuth(authOptions);
