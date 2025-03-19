@@ -50,7 +50,7 @@ export default function LoginForm() {
             <Image
               src="/madoka-icon.jpg"
               alt="Hello Kitty"
-              width={400}
+              width={300}
               height={300}
               className="object-contain"
             />
