@@ -2,8 +2,6 @@ import { NextAuthOptions } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import type { Session, User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { prisma } from "@/lib/prisma";
-import { compare } from "bcrypt";
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET, // Adicione o segredo do NextAuth.js
@@ -23,30 +21,30 @@ export const authOptions: NextAuthOptions = {
             throw new Error("Email and password are required");
           }
 
-          // Busca o usuário no banco de dados
-          const user = await prisma.user.findUnique({
-            where: { email: credentials.email },
-            select: { id: true, email: true, name: true, password: true }, // Seleciona apenas os campos necessários
+          // Chama a sua rota de login personalizada
+          const response = await fetch(`${process.env.NEXTAUTH_URL}/api/login`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
           });
 
-          // Verifica se o usuário existe
-          if (!user) {
-            throw new Error("User not found");
-          }
+          const data = await response.json();
 
-          // Compara a senha fornecida com a senha armazenada
-          const passwordValid = await compare(credentials.password, user.password);
-
-          // Verifica se a senha é válida
-          if (!passwordValid) {
-            throw new Error("Invalid password");
+          // Verifica se a resposta foi bem-sucedida
+          if (!response.ok) {
+            throw new Error(data.error || "Login failed");
           }
 
           // Retorna o objeto do usuário (sem a senha)
           return {
-            id: user.id,
-            email: user.email,
-            name: user.name || undefined, // Converte null para undefined
+            id: data.user.id,
+            email: data.user.email,
+            name: data.user.name || undefined, // Converte null para undefined
           };
         } catch (error) {
           console.error("Auth error:", error); // Log de erros
