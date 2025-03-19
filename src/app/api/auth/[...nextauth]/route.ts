@@ -1,101 +1,46 @@
-import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcrypt";
-import type { NextAuthOptions } from "next-auth/core/types";
+import NextAuth, { NextAuthOptions } from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
+import { JWT } from "next-auth/jwt"; // Importa o tipo JWT
+import { Session } from "next-auth"; // Importa o tipo Session
 
-const prisma = new PrismaClient();
-
-// 🔹 Extensão de Tipos do NextAuth
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      email: string;
-      name?: string | null;
-    };
-  }
-
-  interface User {
-    id: string;
-    email: string;
-    name?: string | null;
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
-    id: string;
-    email: string;
-  }
-}
-
-// 🔹 Configuração de autenticação
 export const authOptions: NextAuthOptions = {
   providers: [
-    CredentialsProvider({
-      name: "Credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
-
-        try {
-          const user = await prisma.user.findUnique({
-            where: { email: credentials.email },
-          });
-
-          if (!user) return null;
-
-          const isPasswordValid = await bcrypt.compare(
-            credentials.password,
-            user.password
-          );
-
-          if (!isPasswordValid) return null;
-
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name || undefined,
-          };
-        } catch (error) {
-          console.error("Erro na autenticação:", error);
-          return null;
-        }
-      },
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
+  session: {
+    strategy: "jwt",
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.email = user.email;
+        token.id = user.id; // Adicionando id do usuário no token (caso necessário)
       }
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id;
-        session.user.email = token.email;
-      }
+      session.user.id = token.id as string; // Passando id do token para o usuário na sessão
       return session;
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
-  pages: {
-    signIn: "/login",
-  },
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 dias
-  },
-  debug: process.env.NODE_ENV === "development",
 };
 
-// 🔹 Forma correta de exportar para Next.js 14
-export const { handlers: { GET, POST } } = NextAuth(authOptions);
+const handler = NextAuth(authOptions);
+
+export async function someFunction({
+  token,
+  user,
+  session,
+}: {
+  token: JWT;
+  user: any; // Se você souber a estrutura de 'user', substitua 'any' pelo tipo correto
+  session: Session;
+}) {
+  console.log(token);
+  console.log(user);
+  console.log(session);
+}
+
+export { handler as GET, handler as POST };
