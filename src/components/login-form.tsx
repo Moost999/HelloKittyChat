@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-
+import { signIn } from "next-auth/react"; // Importe o signIn
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -20,35 +20,33 @@ export default function LoginForm() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-  
+
     try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      // Use o signIn do NextAuth.js
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
       });
-  
-      const data = await response.json();
-  
-      if (!response.ok) {
-        throw new Error(data.error || 'Something went wrong');
+
+      if (result?.error) {
+        throw new Error(result.error);
       }
-  
-      console.log('Login successful:', data);
-      router.push('/chat');
+
+      // Redireciona para a página /chat após o login bem-sucedido
+      router.push("/chat");
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       if (error instanceof Error) {
-        setError(error.message || 'Something went wrong. Please try again.');
+        setError(error.message || "Something went wrong. Please try again.");
       } else {
-        setError('Something went wrong. Please try again.');
+        setError("Something went wrong. Please try again.");
       }
     } finally {
       setIsLoading(false);
     }
   };
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
