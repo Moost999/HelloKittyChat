@@ -48,7 +48,7 @@
 }
 
 body {
-  background-image: url("/hello-kitty-bg.png");
+  background-image: url("/hello-kitty-background.png");
   background-size: 80px;
   background-repeat: repeat;
   background-attachment: fixed;
