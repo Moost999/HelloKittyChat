@@ -1,16 +1,32 @@
-import LoginForm from "@/components/login-form"
+import type React from "react"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
+import { SessionProvider } from "@/components/session-provider"
 
-export default function Home() {
+const inter = Inter({ subsets: ["latin"] })
+
+export const metadata: Metadata = {
+  title: "Hello Kitty Chat",
+  description: "A cute chat app for two special people",
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md px-4 sm:px-0 relative z-10 bg-white/70 rounded-lg p-6 shadow-md">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-pink-600 mb-2">Cute Kitty Chat</h1>
-          <p className="text-gray-600">A special place for us two ❤️</p>
-        </div>
-        <LoginForm />
-      </div>
-    </main>
+    <html lang="en">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+      </head>
+      <body className={inter.className}>
+        <SessionProvider>
+            {children}
+        </SessionProvider>
+      </body>
+    </html>
   )
 }
 
