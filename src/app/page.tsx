@@ -2,7 +2,7 @@ import LoginForm from "@/components/login-form"
 
 export default function Home() {
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center p-4">
+    <main className="login-page relative flex min-h-screen flex-col items-center justify-center p-4">
       {/* Background image container with overlay */}
       <div className="fixed inset-0 z-0">
         <div className="absolute inset-0 bg-[url('/images/hello-kitty-background.jpg')] bg-repeat opacity-30" />
