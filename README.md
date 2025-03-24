@@ -45,13 +45,30 @@ Minha namorada mencionou que não era fã da interface do Instagram, que usávam
 - Prisma (ORM)
 
 **Infra:**
-- Vercel Hosting
-- PlanetScale (Database)
+- Vercel 
 
 ## 🚀 Como Executar Localmente
 
 ## 🔧 Funcionamento Técnico
 
 ### Sistema de SSE
-Implementação de Server-Sent Events para atualização em tempo real sem WebSockets:
+Implementação de Server-Sent Events para atualização em tempo real sem WebSockets
 
+## 📸 Screenshots
+**Light Mode** | **Dark Mode**  
+--- | ---  
+<img src="public/screenshot-light.jpg" width="400"> | <img src="public/screenshot-dark.jpg" width="400">
+
+## 🤝 Como Contribuir
+1. Faça um **Fork** do projeto.
+2. Crie sua **Feature Branch**: `git checkout -b feature/NovaFeature`.
+3. Commit suas mudanças: `git commit -m 'Add NovaFeature'`.
+4. Push para a Branch: `git push origin feature/NovaFeature`.
+5. Abra um **Pull Request**.
+
+## 📝 Licença
+Este projeto está licenciado sob a **Licença MIT** - veja o arquivo `LICENSE` para detalhes.
+
+Feito com ❤️ por [MoostDev - Joao Gionda]  
+📧 Contato: [moostdev@gmail.com]  
+🐱 Inspirado no universo Hello Kitty (uso educacional)
