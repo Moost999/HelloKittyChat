@@ -7,7 +7,7 @@
 Um chat encantador com tema Hello Kitty desenvolvido como desafio pessoal para oferecer uma experiência de mensagens simples e adorável.
 
 <p align="center">
-  <img src="public/hello-kitty-background.jpg" alt="Preview do Chat" width="600">
+  <img src="public/hello-kitty-preview-mobile.png" alt="Preview do Chat" width="600">
 </p>
 
 ## ✨ Motivação
@@ -55,7 +55,7 @@ Implementação de Server-Sent Events para atualização em tempo real sem WebSo
 
 ## 📸 Screenshots  
 --- | ---  
-<img src="public/screenshot-1.png" width="400"> | <img src="public/screenshot-2.png" width="400">
+<img src="public/hello-kitty-preview-mobile" width="400"> | <img src="public/hello-kitty-preview-chat-mobile.png" width="400">
 
 ## 🤝 Como Contribuir
 1. Faça um **Fork** do projeto.
