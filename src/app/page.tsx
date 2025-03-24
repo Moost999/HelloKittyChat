@@ -5,7 +5,7 @@ export default function Home() {
     <main className="relative flex min-h-screen flex-col items-center justify-center p-4">
       {/* Background image container with overlay */}
       <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-[url('/hello-kitty-background.jpg')] bg-repeat opacity-30" />
+        <div className="absolute inset-0 bg-[url('/images/hello-kitty-background.jpg')] bg-repeat opacity-30" />
         <div className="absolute inset-0 bg-pink-50/70" /> {/* Semi-transparent overlay */}
       </div>
 
