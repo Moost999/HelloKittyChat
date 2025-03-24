@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hello Kitty Chat 💖
 
-## Getting Started
+[![License: MIT](https://img.shields.io/badge/License-MIT-pink.svg)](https://opensource.org/licenses/MIT)
+![Next.js](https://img.shields.io/badge/Next.js-14.2.3-black?logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0.2-blue?logo=typescript)
 
-First, run the development server:
+Um chat encantador com tema Hello Kitty desenvolvido como desafio pessoal para oferecer uma experiência de mensagens simples e adorável.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+<p align="center">
+  <img src="public/hello-kitty-background.jpg" alt="Preview do Chat" width="600">
+</p>
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ✨ Motivação
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Minha namorada mencionou que não era fã da interface do Instagram, que usávamos frequentemente para conversar. Decidi criar uma alternativa:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- 🎨 UI minimalista e fofa
+- 💬 Sistema de chat em tempo real
+- 🐱 Tema Hello Kitty personalizado
+- 🚀 Desafio técnico pessoal
 
-## Learn More
+## 🌟 Funcionalidades Principais
 
-To learn more about Next.js, take a look at the following resources:
+- **Chat em Tempo Real** usando SSE (Server-Sent Events)
+- **Tema Dark/Light Mode** automático
+- **Background Temático** Hello Kitty
+- **Animações Suaves** de mensagens
+- **Sistema de Emojis** rápido
+- **Responsivo** para mobile
+- **Autenticação** integrada (NextAuth)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🛠 Tecnologias
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Frontend:**
+- Next.js 14
+- TypeScript
+- Framer Motion (animations)
+- Tailwind CSS
+- Shadcn/ui
 
-## Deploy on Vercel
+**Backend:**
+- Mongo DB
+- Server-Sent Events (SSE)
+- Next API Routes
+- Prisma (ORM)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Infra:**
+- Vercel Hosting
+- PlanetScale (Database)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🚀 Como Executar Localmente
+
+## 🔧 Funcionamento Técnico
+
+### Sistema de SSE
+Implementação de Server-Sent Events para atualização em tempo real sem WebSockets:
+
