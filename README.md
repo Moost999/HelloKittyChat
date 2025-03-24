@@ -47,17 +47,15 @@ Minha namorada mencionou que não era fã da interface do Instagram, que usávam
 **Infra:**
 - Vercel 
 
-## 🚀 Como Executar Localmente
 
 ## 🔧 Funcionamento Técnico
 
 ### Sistema de SSE
 Implementação de Server-Sent Events para atualização em tempo real sem WebSockets
 
-## 📸 Screenshots
-**Light Mode** | **Dark Mode**  
+## 📸 Screenshots  
 --- | ---  
-<img src="public/screenshot-light.jpg" width="400"> | <img src="public/screenshot-dark.jpg" width="400">
+<img src="public/screenshot-1.png" width="400"> | <img src="public/screenshot-2.png" width="400">
 
 ## 🤝 Como Contribuir
 1. Faça um **Fork** do projeto.
