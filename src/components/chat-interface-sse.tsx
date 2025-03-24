@@ -70,7 +70,7 @@ export default function ChatInterface({ initialMessages }: ChatInterfaceProps) {
         behavior: 'smooth',
         block: 'nearest'
       });
-    }, 150);
+    }, 6000);
     return () => clearTimeout(timer);
   }, [messages]);
 
