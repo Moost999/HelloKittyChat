@@ -27,92 +27,65 @@ export default function ChatInterface({ initialMessages }: ChatInterfaceProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
 
-  // Set up SSE connection
+  // SSE connection setup
   useEffect(() => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-    }
-
-    const eventSource = new EventSource("/api/sse");
-    eventSourceRef.current = eventSource;
-
-    eventSource.onmessage = (event) => {
-      try {
-        const newMessages = JSON.parse(event.data);
-        setMessages(newMessages);
-      } catch (error) {
-        console.error("Error parsing SSE data:", error);
-      }
-    };
-
-    eventSource.onerror = (error) => {
-      console.error("SSE error:", error);
-      eventSource.close();
-
-      setTimeout(() => {
-        if (document.visibilityState === "visible") {
-          eventSourceRef.current = new EventSource("/api/sse");
-        }
-      }, 5000);
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden" && eventSourceRef.current) {
+    const setupSSE = () => {
+      if (eventSourceRef.current) {
         eventSourceRef.current.close();
-      } else if (document.visibilityState === "visible" && !eventSourceRef.current) {
-        eventSourceRef.current = new EventSource("/api/sse");
       }
+
+      const eventSource = new EventSource("/api/sse");
+      eventSourceRef.current = eventSource;
+
+      eventSource.onmessage = (event) => {
+        try {
+          const newMessages = JSON.parse(event.data);
+          setMessages(prev => [...prev, ...newMessages.filter((m: Message) => 
+            !prev.some(pm => pm.id === m.id)
+          )]);
+        } catch (error) {
+          console.error("Error parsing SSE data:", error);
+        }
+      };
+
+      eventSource.onerror = () => {
+        eventSource.close();
+        setTimeout(setupSSE, 5000);
+      };
     };
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    setupSSE();
 
     return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
       }
     };
   }, []);
 
+  // Scroll handling
   useEffect(() => {
-    scrollToBottom();
+    const timer = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest'
+      });
+    }, 150);
+    return () => clearTimeout(timer);
   }, [messages]);
 
+  // Dark mode detection
   useEffect(() => {
     if (typeof window !== "undefined") {
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
       setIsDarkMode(prefersDark);
-      if (prefersDark) {
-        document.documentElement.classList.add("dark");
-      }
+      document.documentElement.classList.toggle("dark", prefersDark);
     }
-  }, []);
-
-  useEffect(() => {
-    const metaViewport = document.querySelector("meta[name=viewport]");
-    if (!metaViewport) {
-      const meta = document.createElement("meta");
-      meta.name = "viewport";
-      meta.content = "width=device-width, initial-scale=1, maximum-scale=1";
-      document.head.appendChild(meta);
-    } else {
-      metaViewport.setAttribute("content", "width=device-width, initial-scale=1, maximum-scale=1");
-    }
-
-    return () => {
-      if (metaViewport) {
-        metaViewport.setAttribute("content", "width=device-width, initial-scale=1");
-      }
-    };
   }, []);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
     document.documentElement.classList.toggle("dark");
-  };
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -124,53 +97,43 @@ export default function ChatInterface({ initialMessages }: ChatInterfaceProps) {
     setNewMessage("");
 
     try {
-      const response = await fetch("/api/messages", {
+      await fetch("/api/messages", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: messageToSend }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to send message");
-      }
     } catch (error) {
       console.error("Error sending message:", error);
-      alert("Failed to send message. Please try again.");
     } finally {
       setIsLoading(false);
-
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 10);
+      setTimeout(() => inputRef.current?.focus(), 10);
     }
   };
 
   const addEmoji = (emoji: string) => {
-    setNewMessage((prev) => prev + emoji);
+    setNewMessage(prev => prev + emoji);
     inputRef.current?.focus();
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-100px)] sm:h-[calc(100vh-120px)] relative">
+    <div className="flex flex-col h-[calc(100vh-100px)] sm:h-[calc(100vh-120px)] relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-pink-100/80 dark:bg-pink-950/40 transition-colors duration-300"></div>
+        <div className="absolute inset-0 bg-pink-100/80 dark:bg-pink-950/40"></div>
         <Image
           src="/hello-kitty-backgroundv2.jpg"
           alt="Background"
           fill
-          className="object-cover object-center opacity-60 dark:opacity-30 transition-opacity duration-300"
+          className="object-cover object-center opacity-60 dark:opacity-30"
           priority
         />
       </div>
 
-      {/* Theme Toggle Button */}
+      {/* Theme Toggle */}
       <div className="relative z-20 flex justify-end pt-2 pr-2 sm:pt-3 sm:pr-3">
         <button
           onClick={toggleDarkMode}
-          className="p-2 rounded-full bg-white/80 dark:bg-gray-800/80 shadow-md hover:shadow-lg transition-all duration-300"
+          className="p-2 rounded-full bg-white/80 dark:bg-gray-800/80 shadow-md"
           aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
         >
           {isDarkMode ? (
@@ -182,89 +145,120 @@ export default function ChatInterface({ initialMessages }: ChatInterfaceProps) {
       </div>
 
       {/* Chat Messages */}
-      <Card className="flex-grow overflow-y-auto p-2 sm:p-4 mb-2 sm:mb-4 border-pink-300 dark:border-pink-800 relative z-10 bg-transparent sm:backdrop-blur-sm shadow-lg chat-scrollbar">
-        {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-gray-500 dark:text-gray-400 text-center bg-white/70 dark:bg-gray-800/70 p-3 rounded-lg shadow-sm">
-              No messages yet. Start the conversation! 💕
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3 sm:space-y-4">
-            <AnimatePresence>
-              {messages.map((message, index) => (
-                <motion.div
-                  key={message.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className={`flex ${message.user.email === session?.user?.email ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`flex max-w-[85%] sm:max-w-[75%] ${
-                      message.user.email === session?.user?.email ? "flex-row-reverse" : "flex-row"
-                    }`}
+      <Card className="flex-grow overflow-y-auto p-2 sm:p-4 mb-2 sm:mb-4 border-pink-300 dark:border-pink-800 relative z-10 bg-transparent sm:backdrop-blur-sm shadow-lg">
+        <AnimatePresence mode="popLayout" initial={false}>
+          {messages.length === 0 ? (
+            <motion.div
+              key="empty-state"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex items-center justify-center h-full"
+            >
+              <p className="text-gray-500 dark:text-gray-400 text-center bg-white/70 dark:bg-gray-800/70 p-3 rounded-lg shadow-sm">
+                No messages yet. Start the conversation! 💕
+              </p>
+            </motion.div>
+          ) : (
+            messages.map((message) => (
+              <motion.div
+                key={message.id}
+                layout
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ 
+                  type: "spring",
+                  stiffness: 500,
+                  damping: 30,
+                  mass: 0.5
+                }}
+                className={`flex ${message.user.email === session?.user?.email ? "justify-end" : "justify-start"} mb-2 sm:mb-3`}
+              >
+                <div className={`flex max-w-[85%] sm:max-w-[75%] ${message.user.email === session?.user?.email ? "flex-row-reverse" : "flex-row"}`}>
+                  <Avatar
+                    className={cn(
+                      "h-6 w-6 sm:h-8 sm:w-8 border-2",
+                      message.user.email === session?.user?.email
+                        ? "ml-1 sm:ml-2 border-pink-300 dark:border-pink-700"
+                        : "mr-1 sm:mr-2 border-blue-300 dark:border-blue-700"
+                    )}
                   >
-                    <Avatar
+                    <div
                       className={cn(
-                        "h-6 w-6 sm:h-8 sm:w-8 border-2",
+                        "h-full w-full flex items-center justify-center text-xs sm:text-sm font-bold",
                         message.user.email === session?.user?.email
-                          ? "ml-1 sm:ml-2 border-pink-300 dark:border-pink-700"
-                          : "mr-1 sm:mr-2 border-blue-300 dark:border-blue-700",
+                          ? "bg-pink-200 text-pink-700 dark:bg-pink-800 dark:text-pink-200"
+                          : "bg-blue-200 text-blue-700 dark:bg-blue-800 dark:text-blue-200"
                       )}
                     >
-                      <div
-                        className={cn(
-                          "h-full w-full flex items-center justify-center text-xs sm:text-sm font-bold",
-                          message.user.email === session?.user?.email
-                            ? "bg-pink-200 text-pink-700 dark:bg-pink-800 dark:text-pink-200"
-                            : "bg-blue-200 text-blue-700 dark:bg-blue-800 dark:text-blue-200",
-                        )}
-                      >
-                        {message.user.name?.[0] || message.user.email?.[0] || "?"}
-                      </div>
-                    </Avatar>
-                    <motion.div
-                      initial={{ scale: 0.8 }}
-                      animate={{ scale: 1 }}
-                      transition={{ duration: 0.2 }}
-                      className={cn(
-                        "rounded-lg p-2 sm:p-3 shadow-sm relative",
-                        message.user.email === session?.user?.email
-                          ? "bg-gradient-to-br from-pink-400 to-pink-500 dark:from-pink-600 dark:to-pink-800 text-white rounded-tr-none chat-bubble-right"
-                          : "bg-white dark:bg-gray-800 border border-pink-200 dark:border-pink-800 dark:text-gray-100 rounded-tl-none",
-                      )}
-                    >
-                      {message.content}
-                    </motion.div>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-        )}
-        <div ref={messagesEndRef} className="h-1"></div>
+                      {message.user.name?.[0] || message.user.email?.[0] || "?"}
+                    </div>
+                  </Avatar>
+                  <motion.div
+                    layout
+                    className={cn(
+                      "rounded-lg p-2 sm:p-3 shadow-sm",
+                      message.user.email === session?.user?.email
+                        ? "bg-gradient-to-br from-pink-400 to-pink-500 dark:from-pink-600 dark:to-pink-800 text-white rounded-tr-none"
+                        : "bg-white dark:bg-gray-800 border border-pink-200 dark:border-pink-800 dark:text-gray-100 rounded-tl-none"
+                    )}
+                  >
+                    <p className="text-sm sm:text-base break-words">{message.content}</p>
+                    <p className={cn(
+                      "text-[10px] sm:text-xs mt-1",
+                      message.user.email === session?.user?.email ? "opacity-70" : "opacity-50 dark:opacity-40"
+                    )}>
+                      {new Date(message.createdAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </motion.div>
+                </div>
+              </motion.div>
+            ))
+          )}
+        </AnimatePresence>
+        <div ref={messagesEndRef} />
       </Card>
 
-      {/* Input and Send Button */}
-      <div className="relative z-10 mt-2 sm:mt-4 p-2 sm:p-4 bg-white/80 dark:bg-gray-800/80 rounded-lg shadow-md">
-        <form onSubmit={handleSendMessage} className="flex items-center gap-2 sm:gap-4">
+      {/* Input Area */}
+      <div className="flex flex-col space-y-1 relative z-10">
+        <div className="flex space-x-2 mb-1 justify-center">
+          {["❤️", "😊", "💖", "🍰", "🍓", "🎀"].map((emoji) => (
+            <button
+              key={emoji}
+              onClick={() => addEmoji(emoji)}
+              className="text-sm p-1.5 bg-white/80 dark:bg-gray-800/80 hover:bg-pink-100 dark:hover:bg-pink-900/50 rounded-full shadow-sm transition-colors"
+              aria-label={`${emoji} emoji`}
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+
+        <form onSubmit={handleSendMessage} className="flex space-x-2">
           <Input
             ref={inputRef}
-            type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            className="flex-grow sm:w-[80%] rounded-full"
-            placeholder="Type a message..."
+            placeholder="Type your message..."
+            className="flex-grow border-pink-300 dark:border-pink-700 bg-white/90 dark:bg-gray-800/90 dark:text-gray-100 shadow-sm"
+            disabled={isLoading}
           />
           <Button
             type="submit"
+            className={cn(
+              "bg-gradient-to-r from-pink-500 to-pink-400 hover:from-pink-600 hover:to-pink-500 dark:from-pink-600 dark:to-pink-500 dark:hover:from-pink-700 dark:hover:to-pink-600 shadow-md",
+              isLoading && "opacity-70"
+            )}
             disabled={isLoading || !newMessage.trim()}
-            className="p-3 rounded-full bg-pink-500 text-white hover:bg-pink-600 transition-all duration-300"
-            aria-label="Send message"
           >
-            {isLoading ? "Sending..." : <SendIcon className="h-6 w-6" />}
+            {isLoading ? (
+              <div className="h-4 w-4 sm:h-5 sm:w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <SendIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+            )}
           </Button>
         </form>
       </div>
