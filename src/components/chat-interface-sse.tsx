@@ -29,16 +29,13 @@ export default function ChatInterface({ initialMessages }: ChatInterfaceProps) {
 
   // Set up SSE connection
   useEffect(() => {
-    // Close any existing connection
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
     }
 
-    // Create a new EventSource connection
     const eventSource = new EventSource("/api/sse");
     eventSourceRef.current = eventSource;
 
-    // Handle incoming messages
     eventSource.onmessage = (event) => {
       try {
         const newMessages = JSON.parse(event.data);
@@ -48,12 +45,10 @@ export default function ChatInterface({ initialMessages }: ChatInterfaceProps) {
       }
     };
 
-    // Handle errors
     eventSource.onerror = (error) => {
       console.error("SSE error:", error);
       eventSource.close();
 
-      // Try to reconnect after a delay
       setTimeout(() => {
         if (document.visibilityState === "visible") {
           eventSourceRef.current = new EventSource("/api/sse");
@@ -61,7 +56,6 @@ export default function ChatInterface({ initialMessages }: ChatInterfaceProps) {
       }, 5000);
     };
 
-    // Handle visibility change to conserve resources
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden" && eventSourceRef.current) {
         eventSourceRef.current.close();
@@ -72,7 +66,6 @@ export default function ChatInterface({ initialMessages }: ChatInterfaceProps) {
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    // Clean up on unmount
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (eventSourceRef.current) {
@@ -85,7 +78,6 @@ export default function ChatInterface({ initialMessages }: ChatInterfaceProps) {
     scrollToBottom();
   }, [messages]);
 
-  // Check system preference for dark mode on initial load
   useEffect(() => {
     if (typeof window !== "undefined") {
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -96,9 +88,7 @@ export default function ChatInterface({ initialMessages }: ChatInterfaceProps) {
     }
   }, []);
 
-  // Add this after your other useEffect hooks
   useEffect(() => {
-    // Prevent iOS from zooming on input focus
     const metaViewport = document.querySelector("meta[name=viewport]");
     if (!metaViewport) {
       const meta = document.createElement("meta");
@@ -145,15 +135,12 @@ export default function ChatInterface({ initialMessages }: ChatInterfaceProps) {
       if (!response.ok) {
         throw new Error("Failed to send message");
       }
-
-      // No need to manually fetch messages as SSE will update them
     } catch (error) {
       console.error("Error sending message:", error);
       alert("Failed to send message. Please try again.");
     } finally {
       setIsLoading(false);
 
-      // Focus the input field to keep the keyboard open on mobile
       setTimeout(() => {
         inputRef.current?.focus();
       }, 10);
@@ -179,7 +166,7 @@ export default function ChatInterface({ initialMessages }: ChatInterfaceProps) {
         />
       </div>
 
-      {/* Theme Toggle Button - Moved higher up for better mobile positioning */}
+      {/* Theme Toggle Button */}
       <div className="relative z-20 flex justify-end pt-2 pr-2 sm:pt-3 sm:pr-3">
         <button
           onClick={toggleDarkMode}
@@ -246,88 +233,39 @@ export default function ChatInterface({ initialMessages }: ChatInterfaceProps) {
                         "rounded-lg p-2 sm:p-3 shadow-sm relative",
                         message.user.email === session?.user?.email
                           ? "bg-gradient-to-br from-pink-400 to-pink-500 dark:from-pink-600 dark:to-pink-800 text-white rounded-tr-none chat-bubble-right"
-                          : "bg-white dark:bg-gray-800 border border-pink-200 dark:border-pink-800 dark:text-gray-100 rounded-tl-none chat-bubble-left",
+                          : "bg-white dark:bg-gray-800 border border-pink-200 dark:border-pink-800 dark:text-gray-100 rounded-tl-none",
                       )}
                     >
-                      <p className="text-sm sm:text-base break-words">{message.content}</p>
-                      <p
-                        className={cn(
-                          "text-[10px] sm:text-xs mt-1 flex items-center",
-                          message.user.email === session?.user?.email ? "opacity-70" : "opacity-50 dark:opacity-40",
-                        )}
-                      >
-                        {new Date(message.createdAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
+                      {message.content}
                     </motion.div>
                   </div>
                 </motion.div>
               ))}
             </AnimatePresence>
-            <div ref={messagesEndRef} />
           </div>
         )}
+        <div ref={messagesEndRef} className="h-1"></div>
       </Card>
 
-      {/* Emoji Buttons and Input */}
-      <div className="flex flex-col space-y-1 relative z-10">
-        <div className="flex space-x-2 mb-1 justify-center">
-          {["❤️", "😊", "💖", "🍰", "🍓", "🎀"].map((emoji) => (
-            <motion.button
-              key={emoji}
-              onClick={() => addEmoji(emoji)}
-              className="text-sm p-1.5 bg-white/80 dark:bg-gray-800/80 hover:bg-pink-100 dark:hover:bg-pink-900/50 rounded-full shadow-sm emoji-btn transition-colors duration-200"
-              aria-label={`${emoji} emoji`}
-              whileHover={{ scale: 1.2, rotate: 5 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              {emoji}
-            </motion.button>
-          ))}
-        </div>
-
-        <form onSubmit={handleSendMessage} className="flex space-x-2">
+      {/* Input and Send Button */}
+      <div className="relative z-10 mt-2 sm:mt-4 p-2 sm:p-4 bg-white/80 dark:bg-gray-800/80 rounded-lg shadow-md">
+        <form onSubmit={handleSendMessage} className="flex items-center gap-2 sm:gap-4">
           <Input
             ref={inputRef}
+            type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type your message..."
-            className="flex-grow border-pink-300 dark:border-pink-700 focus:border-pink-400 dark:focus:border-pink-500 focus:ring-pink-400 dark:focus:ring-pink-500 bg-white/90 dark:bg-gray-800/90 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-sm"
-            disabled={isLoading}
-            autoComplete="off"
-            autoCorrect="on"
-            spellCheck="true"
-            enterKeyHint="send"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage(e as unknown as React.FormEvent);
-              }
-            }}
+            className="flex-grow sm:w-[80%] rounded-full"
+            placeholder="Type a message..."
           />
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button
-              type="submit"
-              className={cn(
-                "bg-gradient-to-r from-pink-500 to-pink-400 hover:from-pink-600 hover:to-pink-500 dark:from-pink-600 dark:to-pink-500 dark:hover:from-pink-700 dark:hover:to-pink-600 shadow-md transition-all duration-300",
-                isLoading && "opacity-70",
-              )}
-              disabled={isLoading || !newMessage.trim()}
-            >
-              {isLoading ? (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                  className="h-4 w-4 sm:h-5 sm:w-5 border-2 border-white border-t-transparent rounded-full"
-                />
-              ) : (
-                <SendIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-              )}
-              <span className="sr-only">Send message</span>
-            </Button>
-          </motion.div>
+          <Button
+            type="submit"
+            disabled={isLoading || !newMessage.trim()}
+            className="p-3 rounded-full bg-pink-500 text-white hover:bg-pink-600 transition-all duration-300"
+            aria-label="Send message"
+          >
+            {isLoading ? "Sending..." : <SendIcon className="h-6 w-6" />}
+          </Button>
         </form>
       </div>
     </div>
