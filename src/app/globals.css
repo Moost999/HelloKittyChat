@@ -48,15 +48,19 @@
 }
 
 body {
+  background-color: hsl(var(--background));
+}
+
+/* Apply Hello Kitty background only to the login page */
+.login-page {
   background-image: url("/hello-kitty-background.jpg");
   background-size: 80px;
   background-repeat: repeat;
   background-attachment: fixed;
-  background-color: hsl(var(--background));
 }
 
 @media (min-width: 768px) {
-  body {
+  .login-page {
     background-size: 100px;
   }
 }
