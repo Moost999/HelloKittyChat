@@ -55,7 +55,7 @@ Implementação de Server-Sent Events para atualização em tempo real sem WebSo
 
 ## 📸 Screenshots  
 --- | ---  
-<img src="public/hello-kitty-preview-mobile" width="400"> | <img src="public/hello-kitty-preview-chat-mobile.png" width="400">
+<img src="public/hello-kitty-preview-mobile.png" width="400"> | <img src="public/hello-kitty-preview-chat-mobile.png" width="400">
 
 ## 🤝 Como Contribuir
 1. Faça um **Fork** do projeto.
